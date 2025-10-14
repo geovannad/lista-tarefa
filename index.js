@@ -18,6 +18,21 @@ const hbs = exphbs.create({
   layoutsDir: __dirname + "/views/",
   defaultLayout: "main",
   extname: "handlebars",
+  helpers: {
+    eq: (a, b) => a === b,
+    formatDate: (date) => {
+      if (!date) return "";
+      const d = new Date(date);
+      return d.toLocaleDateString("pt-BR");
+    },
+    isOverdue: (date, done) => {
+      if (!date || done) return false;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const dueDate = new Date(date);
+      return dueDate < today;
+    },
+  },
 });
 
 app.engine("handlebars", hbs.engine);
@@ -29,8 +44,9 @@ app.use("/tasks", taskRoutes);
 app.get("/", (req, res) => res.redirect("/tasks"));
 
 // 5. CONEXÃO COM O BANCO E INICIALIZAÇÃO DO SERVIDOR
+// Em desenvolvimento, usar alter:true aplica alterações de colunas automaticamente
 conn
-  .sync()
+  .sync({ alter: true })
   .then(() => {
     app.listen(PORT, () =>
       console.log(`🚀 Servidor rodando com sucesso em http://localhost:${PORT}`)
